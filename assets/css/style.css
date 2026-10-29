@@ -446,3 +446,46 @@ body:not(.incat) #logo{justify-self:start}
 #splash .sp-logo{width:min(82vw,720px);transform:scale(.97)}
 #splash img.on,#splash .sp-bird.on{opacity:1;transform:scale(1)}
 @media (prefers-reduced-motion: reduce){#splash,#splash img,#splash .sp-bird{transition:none}}
+
+/* ===== Painel do professor em abas (Cartoes, Voz, Aparencia) ===== */
+.sheet{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;max-height:min(92%,780px)}
+.sheet::before{align-self:center;margin:10px 0 2px;flex:none}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 20px 10px 24px;flex:none}
+.phead h2{margin:0}
+.pclose{width:44px;height:44px;padding:0;border-radius:14px;border:2px solid var(--line);background:var(--surface);box-shadow:0 3px 0 var(--line);display:grid;place-items:center;color:var(--muted);position:relative;overflow:hidden}
+.pclose svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
+.pclose:active{transform:translateY(3px);box-shadow:none}
+.ptabs{display:flex;gap:6px;padding:0 20px 12px;border-bottom:2px solid var(--line);flex:none}
+.ptab{flex:1;min-height:46px;padding:0 8px;border:0;border-radius:14px;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:1rem;cursor:pointer}
+.ptab[aria-selected="true"]{background:var(--sel-bg);color:var(--sel-fg)}
+.ptab:focus-visible{outline:3px solid var(--sel-bd);outline-offset:2px}
+.pbody{flex:1;min-height:0;overflow:auto;padding:18px 24px}
+.pane{display:grid;gap:20px}
+.pane[hidden]{display:none}
+.pfoot{flex:none;padding:12px 24px calc(16px + env(safe-area-inset-bottom,0px));border-top:2px solid var(--line)}
+.pfoot .btn{width:100%}
+.lbl{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.lbl .val{font-weight:800;color:var(--sel-fg);background:var(--sel-bg);border-radius:10px;padding:2px 12px;font-size:.9rem}
+.rl{display:flex;justify-content:space-between;font-size:.85rem;font-weight:800;color:var(--muted)}
+.row small{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin-top:2px}
+.vtest{width:100%}
+
+.sheet{height:min(88%,780px)}
+
+/* ===== Cabecalho em 3 areas: esquerda | marca | direita (tema + painel do professor) ===== */
+header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;padding-inline:12px}
+.hl,.hr{display:flex;align-items:center;gap:8px;min-width:0}
+.hr{justify-content:flex-end}
+header .brand{grid-column:2!important;grid-row:1!important;justify-self:center!important;max-width:100%!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.incat header .brand{padding:8px 16px;font-size:1.05rem}
+#logo,.back-btn,.who,.theme-btn,.menu-btn{grid-column:auto!important;grid-row:auto!important;justify-self:auto!important}
+header #logo{width:44px;height:44px;flex:none}
+.back-btn,.theme-btn,.menu-btn{width:44px;height:44px;flex:none}
+.who{max-width:26vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-btn{padding:0;display:grid;place-items:center;border-radius:14px;border:2px solid var(--line);background:var(--surface);box-shadow:0 3px 0 var(--line);color:var(--muted);position:relative;overflow:hidden}
+.menu-btn svg{width:22px;height:22px;fill:currentColor;display:block}
+.menu-btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.menu-btn:focus-visible{outline:3px solid var(--sel-bd);outline-offset:2px}
+.theme-btn svg{width:24px;height:24px}
+
+body header,body.incat header,body:not(.incat) header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}

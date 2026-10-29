@@ -8,7 +8,11 @@ Feito para rodar em tablets e celulares, direto no navegador, sem instalar nada 
 
 - Seis categorias (Preciso, Sentimentos, Escola, Brincar, Pessoas, Conversa) com 54 cartões, cada um com um papagaio.
 - Ao tocar num cartão, ele abre em tela cheia e o app fala a frase, por exemplo "Quero ir ao banheiro".
-- Painel do professor: segure o ícone de engrenagem (canto inferior direito) por cerca de 1,5 segundo. Lá dá para escolher quais cartões aparecem, o nome do aluno, o estilo, o tom e a velocidade da voz, o volume e o tema (claro ou escuro).
+- Painel do professor: toque no botão de três pontinhos, ao lado do botão de sol e lua no topo da tela. Também continua funcionando o atalho antigo de segurar o ícone de engrenagem (canto inferior direito) por cerca de 1,5 segundo. O painel tem três abas:
+  - **Cartões:** nome do aluno, níveis Iniciante, Intermediário e Todos, escolha cartão a cartão e um cartão personalizado.
+  - **Voz:** ligar ou desligar a voz, estilo (Natural, Alegre, Papagaio e Grave), voz do aparelho, tom, velocidade, volume, piado do papagaio e botão para testar a voz.
+  - **Aparência:** tema automático, claro ou escuro.
+- Voz padrão: **Natural** (tom normal e velocidade um pouco mais calma). O estilo Papagaio continua disponível como opção.
 - As escolhas ficam salvas só no próprio aparelho (`localStorage`). Nenhum dado é enviado para a internet.
 
 ## Estrutura

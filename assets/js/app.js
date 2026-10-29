@@ -129,7 +129,7 @@
   DATA.forEach(function (c) { c.items.forEach(function (i) { ALL.push(i.id); }); });
   function firstN(n) { var r = []; DATA.forEach(function (c) { c.items.slice(0, n).forEach(function (i) { r.push(i.id); }); }); return r; }
   var PRESETS = { ini: ["banheiro", "comer", "beber", "dor", "sim", "nao"], med: firstN(4), all: ALL.slice() };
-  var DEF = { voice: true, volume: 0.8, pitch: 1.55, rate: 1, vpreset: "papagaio", vname: "", chirp: false, name: "", theme: "auto", on: ALL.slice(), extra: { label: "", emoji: "⭐" } };
+  var DEF = { voice: true, volume: 0.8, pitch: 1, rate: 0.9, vpreset: "natural", vname: "", chirp: false, name: "", theme: "auto", on: ALL.slice(), extra: { label: "", emoji: "⭐" } };
   var S = load(), view = null, backTimer = null;
   var home = document.getElementById("home"), slot = document.getElementById("slot"), gear = document.getElementById("gear"), who = document.getElementById("who");
   var backBtn = document.getElementById("back"), logo = document.getElementById("logo"), LOGO_HEADER = document.getElementById("logo").src, titleEl = document.getElementById("title");
@@ -159,10 +159,16 @@
   });
   var hasSpeech = "speechSynthesis" in window;
 
+  function migrate(r) {
+    if (r.vpreset === "papagaio" && r.pitch === 1.55 && r.rate === 1 && !r.vname) { r.vpreset = DEF.vpreset; r.pitch = DEF.pitch; r.rate = DEF.rate; }
+    return r;
+  }
+  function pitchLabel(v) { return v < 0.85 ? "Grave" : v < 1.15 ? "Normal" : v < 1.4 ? "Agudo" : "Muito agudo"; }
+  function rateLabel(v) { return v < 0.8 ? "Devagar" : v < 1.05 ? "Normal" : "Rápido"; }
   function load() {
     try {
       var o = JSON.parse(localStorage.getItem("toque-e-fale-3"));
-      if (o) return {
+      if (o) return migrate({
         voice: o.voice !== false,
         volume: typeof o.volume === "number" ? o.volume : DEF.volume,
         pitch: typeof o.pitch === "number" ? o.pitch : DEF.pitch, rate: typeof o.rate === "number" ? o.rate : DEF.rate,
@@ -171,13 +177,13 @@
         theme: o.theme === "light" || o.theme === "dark" ? o.theme : "auto",
         on: Array.isArray(o.on) && o.on.length ? o.on.concat(NEWIDS.filter(function (x) { return o.on.indexOf("sim") > -1 && o.on.indexOf("casa") > -1 && o.on.indexOf(x) < 0; })) : ALL.slice(),
         extra: o.extra && typeof o.extra.label === "string" ? o.extra : { label: "", emoji: "⭐" }
-      };
+      });
     } catch (e) {}
     return JSON.parse(JSON.stringify(DEF));
   }
   function save() { try { localStorage.setItem("toque-e-fale-3", JSON.stringify(S)); } catch (e) {} }
 
-  var VPRE = { papagaio: { n: "Papagaio", p: 1.55, r: 1 }, alegre: { n: "Alegre", p: 1.25, r: 0.95 }, natural: { n: "Natural", p: 1, r: 0.9 }, grave: { n: "Grave", p: 0.8, r: 0.9 } };
+  var VPRE = { natural: { n: "Natural", p: 1, r: 0.9 }, alegre: { n: "Alegre", p: 1.2, r: 0.95 }, papagaio: { n: "Papagaio", p: 1.55, r: 1 }, grave: { n: "Grave", p: 0.8, r: 0.9 } };
   function ptVoices() { try { return speechSynthesis.getVoices().filter(function (v) { return /^pt/i.test(v.lang); }); } catch (e) { return []; } }
   function score(v) { return (/pt[-_]BR/i.test(v.lang) ? 4 : 0) + (/natural|neural|online/i.test(v.name) ? 3 : 0) + (/google/i.test(v.name) ? 2 : 0) + (/francisca|luciana|thalita|antonio|camila|vit[oó]ria/i.test(v.name) ? 1 : 0); }
   function pickVoice() {
@@ -285,6 +291,7 @@
   gear.addEventListener("pointerdown", startHold);
   ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { gear.addEventListener(ev, endHold); });
   gear.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  document.getElementById("menu").addEventListener("click", openPanel);
   gear.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(); } });
 
   function openPanel() {
@@ -298,21 +305,35 @@
     }).join("");
     p.innerHTML =
       '<div class="sheet" role="dialog" aria-label="Painel do professor">' +
-        '<h2>Painel do professor</h2>' +
-        '<div class="field"><label for="sname">Nome do aluno</label><input id="sname" type="text" maxlength="24" placeholder="Aparece no topo da tela" value="' + esc(S.name) + '"></div>' +
-        '<div class="field"><label>Cartões liberados</label><p>Comece com poucos e aumente conforme o aluno evolui. Uma categoria sem cartões some da tela inicial.</p><div class="btns"><button type="button" class="btn quiet" data-preset="ini">Iniciante</button><button type="button" class="btn quiet" data-preset="med">Intermediário</button><button type="button" class="btn quiet" data-preset="all">Todos</button></div></div>' +
-        groups +
-        '<div class="field"><label for="xl">Cartão personalizado</label><p>Palavra ou frase do aluno e um emoji. Deixe a palavra vazia para ocultar.</p><div class="two"><input id="xl" type="text" maxlength="22" placeholder="Ex.: Meu ursinho" value="' + esc(S.extra.label) + '"><input id="xe" type="text" maxlength="4" value="' + esc(S.extra.emoji) + '" aria-label="Emoji"></div></div>' +
-        '<div class="field"><label>Tema</label><div class="seg"><button type="button" class="chip" data-theme-opt="auto" aria-pressed="' + (S.theme === "auto") + '">Automático</button><button type="button" class="chip" data-theme-opt="light" aria-pressed="' + (S.theme === "light") + '">Claro</button><button type="button" class="chip" data-theme-opt="dark" aria-pressed="' + (S.theme === "dark") + '">Escuro</button></div></div>' +
-        '<div class="row"><label for="vsw">Voz</label><button type="button" id="vsw" class="switch" role="switch" aria-checked="' + S.voice + '"></button></div>' +
-        '<div class="field"><label>Estilo da voz</label><div class="seg">' + Object.keys(VPRE).map(function (k) { return '<button type="button" class="chip" data-vpre="' + k + '" aria-pressed="' + (S.vpreset === k) + '">' + VPRE[k].n + '</button>'; }).join("") + '</div></div>' +
-        '<div class="field"><label for="vsel">Voz do aparelho</label><select id="vsel"></select></div>' +
-        '<div class="field"><label for="vpitch">Tom (grave \u2194 agudo)</label><input id="vpitch" type="range" min="0.5" max="2" step="0.05" value="' + S.pitch + '"></div>' +
-        '<div class="field"><label for="vrate">Velocidade</label><input id="vrate" type="range" min="0.6" max="1.3" step="0.05" value="' + S.rate + '"></div>' +
-        '<div class="row"><label for="csw">Piado do papagaio antes da fala</label><button type="button" id="csw" class="switch" role="switch" aria-checked="' + S.chirp + '"></button></div>' +
-        '<div class="field"><label for="vol">Volume</label><input id="vol" type="range" min="0.1" max="1" step="0.1" value="' + S.volume + '"></div>' +
-        (hasSpeech ? '' : '<div class="note">Este aparelho não tem voz disponível no navegador.</div>') +
-        '<div class="btns"><button type="button" class="btn quiet" id="test">Testar voz</button><button type="button" class="btn" id="done">Pronto</button></div>' +
+        '<div class="phead"><h2>Painel do professor</h2><button type="button" class="pclose" id="pclose" aria-label="Fechar o painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+        '<div class="ptabs" role="tablist">' +
+          '<button type="button" role="tab" class="ptab" data-tab="cartoes" aria-selected="true">Cartões</button>' +
+          '<button type="button" role="tab" class="ptab" data-tab="voz" aria-selected="false">Voz</button>' +
+          '<button type="button" role="tab" class="ptab" data-tab="aparencia" aria-selected="false">Aparência</button>' +
+        '</div>' +
+        '<div class="pbody">' +
+          '<section class="pane" id="pane-cartoes" role="tabpanel">' +
+            '<div class="field"><label for="sname">Nome do aluno</label><input id="sname" type="text" maxlength="24" placeholder="Aparece no topo da tela" value="' + esc(S.name) + '"></div>' +
+            '<div class="field"><label>Cartões liberados</label><p>Comece com poucos e aumente conforme o aluno evolui. Uma categoria sem cartões some da tela inicial.</p><div class="btns"><button type="button" class="btn quiet" data-preset="ini">Iniciante</button><button type="button" class="btn quiet" data-preset="med">Intermediário</button><button type="button" class="btn quiet" data-preset="all">Todos</button></div></div>' +
+            groups +
+            '<div class="field"><label for="xl">Cartão personalizado</label><p>Palavra ou frase do aluno e um emoji. Deixe a palavra vazia para ocultar.</p><div class="two"><input id="xl" type="text" maxlength="22" placeholder="Ex.: Meu ursinho" value="' + esc(S.extra.label) + '"><input id="xe" type="text" maxlength="4" value="' + esc(S.extra.emoji) + '" aria-label="Emoji"></div></div>' +
+          '</section>' +
+          '<section class="pane" id="pane-voz" role="tabpanel" hidden>' +
+            '<div class="row"><label for="vsw">Voz ligada</label><button type="button" id="vsw" class="switch" role="switch" aria-checked="' + S.voice + '"></button></div>' +
+            '<div class="field"><label>Estilo da voz</label><p>“Natural” é o padrão e o mais indicado para o dia a dia. Os outros estilos são opções.</p><div class="seg">' + Object.keys(VPRE).map(function (k) { return '<button type="button" class="chip" data-vpre="' + k + '" aria-pressed="' + (S.vpreset === k) + '">' + VPRE[k].n + '</button>'; }).join("") + '</div></div>' +
+            '<div class="field"><label for="vsel">Voz do aparelho</label><p>Vozes em português instaladas no tablet. Em “Automática”, o app escolhe a melhor disponível.</p><select id="vsel"></select></div>' +
+            '<div class="field"><div class="lbl"><label for="vpitch">Tom</label><span class="val" id="vpv">' + pitchLabel(S.pitch) + '</span></div><input id="vpitch" type="range" min="0.5" max="2" step="0.05" value="' + S.pitch + '"><div class="rl"><span>Grave</span><span>Agudo</span></div></div>' +
+            '<div class="field"><div class="lbl"><label for="vrate">Velocidade</label><span class="val" id="vrv">' + rateLabel(S.rate) + '</span></div><input id="vrate" type="range" min="0.6" max="1.3" step="0.05" value="' + S.rate + '"><div class="rl"><span>Devagar</span><span>Rápido</span></div></div>' +
+            '<div class="field"><div class="lbl"><label for="vol">Volume</label></div><input id="vol" type="range" min="0.1" max="1" step="0.1" value="' + S.volume + '"><div class="rl"><span>Baixo</span><span>Alto</span></div></div>' +
+            '<div class="row"><label for="csw">Piado do papagaio antes da fala<small>Desligado por padrão</small></label><button type="button" id="csw" class="switch" role="switch" aria-checked="' + S.chirp + '"></button></div>' +
+            (hasSpeech ? '' : '<div class="note">Este aparelho não tem voz disponível no navegador.</div>') +
+            '<button type="button" class="btn quiet vtest" id="test">Testar voz</button>' +
+          '</section>' +
+          '<section class="pane" id="pane-aparencia" role="tabpanel" hidden>' +
+            '<div class="field"><label>Tema</label><p>“Automático” segue o tema do aparelho. Também dá para trocar pelo botão de sol e lua no topo do app.</p><div class="seg"><button type="button" class="chip" data-theme-opt="auto" aria-pressed="' + (S.theme === "auto") + '">Automático</button><button type="button" class="chip" data-theme-opt="light" aria-pressed="' + (S.theme === "light") + '">Claro</button><button type="button" class="chip" data-theme-opt="dark" aria-pressed="' + (S.theme === "dark") + '">Escuro</button></div></div>' +
+          '</section>' +
+        '</div>' +
+        '<div class="pfoot"><button type="button" class="btn" id="done">Pronto</button></div>' +
       '</div>';
     slot.appendChild(p);
 
@@ -360,6 +381,18 @@
     p.querySelector("#vrate").addEventListener("change", function () { speak("Quero ir ao banheiro"); });
     var csw = p.querySelector("#csw");
     csw.addEventListener("click", function () { S.chirp = !S.chirp; csw.setAttribute("aria-checked", S.chirp); save(); speak("Quero ir ao banheiro"); });
+    p.querySelectorAll(".ptab").forEach(function (t) {
+      t.addEventListener("click", function () {
+        var k = t.getAttribute("data-tab");
+        p.querySelectorAll(".ptab").forEach(function (x) { x.setAttribute("aria-selected", x === t); });
+        p.querySelectorAll(".pane").forEach(function (s) { s.hidden = s.id !== "pane-" + k; });
+        p.querySelector(".pbody").scrollTop = 0;
+      });
+    });
+    p.querySelector("#pclose").addEventListener("click", closePanel);
+    p.querySelector("#vpitch").addEventListener("input", function (e) { p.querySelector("#vpv").textContent = pitchLabel(parseFloat(e.target.value)); });
+    p.querySelector("#vrate").addEventListener("input", function (e) { p.querySelector("#vrv").textContent = rateLabel(parseFloat(e.target.value)); });
+    p.querySelectorAll("[data-vpre]").forEach(function (b) { b.addEventListener("click", function () { p.querySelector("#vpv").textContent = pitchLabel(S.pitch); p.querySelector("#vrv").textContent = rateLabel(S.rate); }); });
     p.querySelector("#done").addEventListener("click", closePanel);
   }
   function closePanel() { var p = document.getElementById("panel"); if (p) p.remove(); }
