@@ -442,7 +442,7 @@ body:not(.incat) #logo{justify-self:start}
 #splash{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .5s ease;cursor:pointer}
 #splash.out{opacity:0;pointer-events:none}
 #splash img{position:absolute;max-width:78vw;opacity:0;transition:opacity .6s ease,transform .6s ease}
-#splash .sp-bird{position:absolute;height:min(62vh,100vw);aspect-ratio:472/541;background-repeat:no-repeat;background-size:600% 100%;background-position:0 0;opacity:0;transform:scale(.94);transition:opacity .6s ease,transform .6s ease}
+#splash .sp-bird{position:absolute;height:min(62vh,100vw);aspect-ratio:434/541;background-repeat:no-repeat;background-size:600% 100%;background-position:0 0;opacity:0;transform:scale(.94);transition:opacity .6s ease,transform .6s ease}
 #splash .sp-logo{width:min(82vw,720px);transform:scale(.97)}
 #splash img.on,#splash .sp-bird.on{opacity:1;transform:scale(1)}
 @media (prefers-reduced-motion: reduce){#splash,#splash img,#splash .sp-bird{transition:none}}
