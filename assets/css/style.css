@@ -489,3 +489,29 @@ header #logo{width:44px;height:44px;flex:none}
 .theme-btn svg{width:24px;height:24px}
 
 body header,body.incat header,body:not(.incat) header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}
+
+/* ===== Senha do painel do professor ===== */
+#lock{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.42);display:grid;place-items:center;padding:16px}
+.lockcard{background:var(--surface);color:var(--ink);border-radius:24px;padding:22px 22px 18px;width:min(100%,380px);display:grid;gap:12px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.lockcard h2{margin:0;font-size:1.35rem;font-weight:900}
+.lockcard p{margin:0;color:var(--muted);font-weight:700}
+.lk-ico{width:56px;height:56px;margin:0 auto;border-radius:18px;background:#00ADD8;box-shadow:0 4px 0 #0089AE;display:grid;place-items:center}
+.lk-ico svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.lockcard input[type=password]{width:100%;min-height:56px;padding:0 16px;border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-size:1.1rem;text-align:center}
+.lockcard input[type=password]:focus{outline:3px solid var(--sel-bd);outline-offset:2px;border-color:var(--sel-bd)}
+.lk-err{color:#C0392B;font-weight:800}
+.lk-err[hidden]{display:none}
+.lk-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.lockcard.shake{animation:lkshake .36s ease}
+@keyframes lkshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.lockcard.shake{animation:none}}
+
+/* ===== Niveis de cartoes ===== */
+.btn.lvl{display:grid;gap:2px;justify-items:center;min-height:56px;padding:6px 14px;text-transform:none;letter-spacing:.02em}
+.btn.lvl small{font-size:.78rem;font-weight:800;letter-spacing:0;color:var(--muted)}
+.btn.lvl[aria-pressed="true"]{background:var(--sel-bg);border-color:var(--sel-bd);box-shadow:0 4px 0 var(--sel-bd);color:var(--sel-fg)}
+.btn.lvl[aria-pressed="true"] small{color:var(--sel-fg)}
+.lvlhint{font-size:.9rem;line-height:1.4}
+
+.btns:has(.lvl){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.btn.lvl{padding:6px 4px;font-size:.8rem}

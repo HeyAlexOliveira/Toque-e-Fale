@@ -29,7 +29,7 @@
     "mochila": "assets/img/cartoes/escola/mochila.webp",
     "pintar": "assets/img/cartoes/escola/pintar.webp",
     "recreio": "assets/img/cartoes/escola/recreio.webp",
-    "terminei": "assets/img/cartoes/escola/terminei.webp",
+    "terminei": "assets/img/cartoes/conversa/terminei.webp",
     "blocos": "assets/img/cartoes/brincar/blocos.webp",
     "carrinho": "assets/img/cartoes/brincar/carrinho.webp",
     "musica": "assets/img/cartoes/brincar/musica.webp",
@@ -87,7 +87,6 @@
       { id: "caderno",  word: "Caderno",  emoji: "📓", say: "Quero o caderno" },
       { id: "pintar",   word: "Pintar",   emoji: "🎨", say: "Quero pintar" },
       { id: "mochila",  word: "Mochila",  emoji: "🎒", say: "Quero minha mochila" },
-      { id: "terminei", word: "Terminei", emoji: "✅", say: "Terminei" },
       { id: "recreio",  word: "Recreio",  emoji: "🔔", say: "Quero ir para o recreio" } ] },
     { id: "brincar", word: "Brincar", emoji: "⚽", items: [
       { id: "bola",     word: "Bola",     emoji: "⚽", say: "Quero a bola" },
@@ -115,6 +114,7 @@
       { id: "mais",     word: "Mais",     emoji: "➕", say: "Quero mais" },
       { id: "outro",    word: "Outro",    emoji: "🔄", say: "Quero outro" },
       { id: "chega",    word: "Chega",    emoji: "🛑", say: "Chega, quero parar" },
+      { id: "terminei", word: "Terminei", emoji: "✅", say: "Terminei" },
       { id: "espera",   word: "Espera",   emoji: "⏳", say: "Espera um pouco" },
       { id: "gostei",   word: "Gostei",   emoji: "❤️", say: "Eu gostei" },
       { id: "naogostei",word: "Não gostei", emoji: "💔", say: "Eu não gostei" },
@@ -128,8 +128,16 @@
   var ALL = [];
   DATA.forEach(function (c) { c.items.forEach(function (i) { ALL.push(i.id); }); });
   function firstN(n) { var r = []; DATA.forEach(function (c) { c.items.slice(0, n).forEach(function (i) { r.push(i.id); }); }); return r; }
-  var PRESETS = { ini: ["banheiro", "comer", "beber", "dor", "sim", "nao"], med: firstN(4), all: ALL.slice() };
-  var DEF = { voice: true, volume: 0.8, pitch: 1, rate: 0.9, vpreset: "natural", vname: "", chirp: false, name: "", theme: "auto", on: ALL.slice(), extra: { label: "", emoji: "⭐" } };
+  /* Niveis de cartoes (base: docs/base-cientifica.md). Pensados para estudantes com TEA e dificuldade de fala:
+     Iniciante (10): necessidades e seguranca (banheiro, dor, ajuda), pedidos de itens que motivam (comer, beber),
+       respostas (sim, nao) e controle da atividade (chega, mais, terminei);
+     Intermediario (34): soma as outras necessidades, sentimentos, pessoas proximas, favoritos e a etiqueta social;
+     Completo: todos os cartoes. */
+  var INI = ["banheiro", "beber", "comer", "dor", "ajuda", "sim", "nao", "chega", "mais", "terminei"];
+  var MED = INI.concat(["calor", "frio", "descansar", "feliz", "triste", "bravo", "medo", "cansado", "mal", "mae", "pai", "professor", "professora", "lanche", "recreio", "bola", "musica", "oi", "tchau", "espera", "gostei", "naogostei", "porfavor", "obrigado"]);
+  var PRESETS = { ini: INI, med: MED, all: ALL.slice() };
+  function sameSet(a, b) { return a.length === b.length && a.every(function (x) { return b.indexOf(x) > -1; }); }
+  var DEF = { voice: true, volume: 0.8, pitch: 1, rate: 0.9, vpreset: "natural", vname: "", chirp: false, name: "", theme: "auto", lvlv: 2, on: INI.slice(), extra: { label: "", emoji: "⭐" } };
   var S = load(), view = null, backTimer = null;
   var home = document.getElementById("home"), slot = document.getElementById("slot"), gear = document.getElementById("gear"), who = document.getElementById("who");
   var backBtn = document.getElementById("back"), logo = document.getElementById("logo"), LOGO_HEADER = document.getElementById("logo").src, titleEl = document.getElementById("title");
@@ -160,6 +168,8 @@
   var hasSpeech = "speechSynthesis" in window;
 
   function migrate(r) {
+    /* quem ainda estava com todos os cartoes (antigo padrao, nunca alterado) volta ao Iniciante uma unica vez; depois disso a escolha do professor e respeitada */
+    if (r.lvlv !== 2) { if (sameSet(r.on, ALL)) r.on = INI.slice(); r.lvlv = 2; }
     if (r.vpreset === "papagaio" && r.pitch === 1.55 && r.rate === 1 && !r.vname) { r.vpreset = DEF.vpreset; r.pitch = DEF.pitch; r.rate = DEF.rate; }
     return r;
   }
@@ -175,7 +185,8 @@
         vpreset: typeof o.vpreset === "string" ? o.vpreset : (typeof o.pitch === "number" ? "" : DEF.vpreset), vname: typeof o.vname === "string" ? o.vname : "", chirp: o.chirp === true,
         name: typeof o.name === "string" ? o.name : "",
         theme: o.theme === "light" || o.theme === "dark" ? o.theme : "auto",
-        on: Array.isArray(o.on) && o.on.length ? o.on.concat(NEWIDS.filter(function (x) { return o.on.indexOf("sim") > -1 && o.on.indexOf("casa") > -1 && o.on.indexOf(x) < 0; })) : ALL.slice(),
+        on: Array.isArray(o.on) && o.on.length ? o.on.concat(NEWIDS.filter(function (x) { return o.on.indexOf("sim") > -1 && o.on.indexOf("casa") > -1 && o.on.indexOf(x) < 0; })) : INI.slice(),
+        lvlv: o.lvlv,
         extra: o.extra && typeof o.extra.label === "string" ? o.extra : { label: "", emoji: "⭐" }
       });
     } catch (e) {}
@@ -294,7 +305,37 @@
   document.getElementById("menu").addEventListener("click", openPanel);
   gear.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(); } });
 
+  /* Senha do painel do professor (trava simples: impede que o aluno mexa sem querer; para trocar, altere o texto abaixo) */
+  var SENHA_PROFESSOR = "professor";
+  function norm(t) { return String(t || "").trim().toLowerCase(); }
+  function closeLock() { var l = document.getElementById("lock"); if (l) l.remove(); }
   function openPanel() {
+    closePanel(); closeLock();
+    var l = document.createElement("div");
+    l.id = "lock";
+    l.innerHTML =
+      '<div class="lockcard" role="dialog" aria-modal="true" aria-labelledby="lk-t">' +
+        '<div class="lk-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></div>' +
+        '<h2 id="lk-t">Área do professor</h2>' +
+        '<p>Digite a senha para abrir as configurações.</p>' +
+        '<input id="lk-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Senha" aria-label="Senha">' +
+        '<div class="lk-err" id="lk-err" role="alert" hidden>Senha incorreta. Tente de novo.</div>' +
+        '<div class="lk-btns"><button type="button" class="btn quiet" id="lk-cancel">Cancelar</button><button type="button" class="btn" id="lk-ok">Entrar</button></div>' +
+      '</div>';
+    slot.appendChild(l);
+    var inp = l.querySelector("#lk-in"), err = l.querySelector("#lk-err"), card = l.querySelector(".lockcard");
+    function tryIt() {
+      if (norm(inp.value) === norm(SENHA_PROFESSOR)) { closeLock(); openPanelNow(); return; }
+      err.hidden = false; inp.value = ""; inp.focus();
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+    }
+    l.querySelector("#lk-ok").addEventListener("click", tryIt);
+    l.querySelector("#lk-cancel").addEventListener("click", closeLock);
+    l.addEventListener("click", function (e) { if (e.target === l) closeLock(); });
+    l.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); tryIt(); } else if (e.key === "Escape") closeLock(); });
+    setTimeout(function () { inp.focus(); }, 50);
+  }
+  function openPanelNow() {
     closePanel();
     var p = document.createElement("div");
     p.id = "panel";
@@ -314,7 +355,7 @@
         '<div class="pbody">' +
           '<section class="pane" id="pane-cartoes" role="tabpanel">' +
             '<div class="field"><label for="sname">Nome do aluno</label><input id="sname" type="text" maxlength="24" placeholder="Aparece no topo da tela" value="' + esc(S.name) + '"></div>' +
-            '<div class="field"><label>Cartões liberados</label><p>Comece com poucos e aumente conforme o aluno evolui. Uma categoria sem cartões some da tela inicial.</p><div class="btns"><button type="button" class="btn quiet" data-preset="ini">Iniciante</button><button type="button" class="btn quiet" data-preset="med">Intermediário</button><button type="button" class="btn quiet" data-preset="all">Todos</button></div></div>' +
+            '<div class="field"><label>Cartões liberados</label><p>Comece pelo Iniciante e aumente conforme o aluno se acostuma. Uma categoria sem cartões some da tela inicial.</p><div class="btns">' + [["ini", "Iniciante"], ["med", "Intermediário"], ["all", "Completo"]].map(function (x) { return '<button type="button" class="btn quiet lvl" data-preset="' + x[0] + '" aria-pressed="' + sameSet(S.on, PRESETS[x[0]]) + '">' + x[1] + '<small>' + PRESETS[x[0]].length + ' cartões</small></button>'; }).join("") + '</div><p class="lvlhint"><b>Iniciante:</b> banheiro, beber, comer, dor, ajuda, sim, não, chega, mais e terminei. <b>Intermediário:</b> soma as outras necessidades, os sentimentos, as pessoas, alguns favoritos e as palavras de educação. <b>Completo:</b> todos os cartões.</p></div>' +
             groups +
             '<div class="field"><label for="xl">Cartão personalizado</label><p>Palavra ou frase do aluno e um emoji. Deixe a palavra vazia para ocultar.</p><div class="two"><input id="xl" type="text" maxlength="22" placeholder="Ex.: Meu ursinho" value="' + esc(S.extra.label) + '"><input id="xe" type="text" maxlength="4" value="' + esc(S.extra.emoji) + '" aria-label="Emoji"></div></div>' +
           '</section>' +
@@ -337,7 +378,10 @@
       '</div>';
     slot.appendChild(p);
 
-    function sync() { p.querySelectorAll(".chip[data-id]").forEach(function (ch) { ch.setAttribute("aria-pressed", S.on.indexOf(ch.getAttribute("data-id")) > -1); }); }
+    function sync() {
+      p.querySelectorAll(".chip[data-id]").forEach(function (ch) { ch.setAttribute("aria-pressed", S.on.indexOf(ch.getAttribute("data-id")) > -1); });
+      p.querySelectorAll(".lvl").forEach(function (b) { b.setAttribute("aria-pressed", sameSet(S.on, PRESETS[b.getAttribute("data-preset")])); });
+    }
     p.addEventListener("click", function (e) {
       var th = e.target.closest("[data-theme-opt]");
       if (th) {
